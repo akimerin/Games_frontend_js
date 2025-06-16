@@ -1,69 +1,41 @@
 import React from 'react';
+import { connect } from 'react-redux';
+import { todoDelete } from './actions';
+import { NavLink } from 'react-router-dom';
 
 class ToDoTask extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      done: this.props.task.done
-    };
-
-    this.onStatusClick = this.onStatusClick.bind(this);
-    this.onDeleteClick = this.onDeleteClick.bind(this);
-  }
-
-  onStatusClick(e) {
-    e.preventDefault();
-
-	  fetch(`tasks/${this.props.task._id}`,{
-	  method: 'PATCH', 
-			body: JSON.stringify({
-			done:  !this.state.done
-			}),
-		headers:  {
-		'Content-Type':'application/json'
-			}
-
-	  }).then((res)=> {
-      if (res.status === 200) {
-        console.log('Updated');
-		    this.setState({
-      done: !this.state.done
-    });
-      } 
-	  else {
-        console.log('Not updeted');
-      }
-    });
-	
-  }
-
-  onDeleteClick(e) {
-    e.preventDefault();
-
-  fetch(`tasks/${this.props.task._id}`,{
-	  method: 'DELETE'
-	  }).then((res)=> {
-      if (res.status === 200) {
-        console.log('Deleted');
-		this.props.onTaskDelete(this.props.task._id);
-      } 
-	  else {
-        console.log('Not deleted');
-      }
-    });
-  }
+  onDelete = () => {
+    fetch(`tasks/${this.props.task._id}`, { method: 'DELETE' })
+      .then(() => this.props.dispatch(todoDelete(this.props.task._id)));
+  };
 
   render() {
+    const { name, price, studio, genre, description } = this.props.task;
+
     return (
-      <li>
-		<span> {this.props.task.name} - </span>
-		<span><i> {this.props.task.description} </i></span>
-		<span  onClick={ this.onStatusClick}><b> {this.state.done ? 'Done' : 'Todo'} </b></span>
-		<button onClick= {this.onDeleteClick}>Delete</button>	
-      </li>
+      <div className="game-item">
+        <div className="game-item-header">
+          <h2 className="game-title">{name}</h2>
+          <span className="game-price">{price}₽</span>
+        </div>
+        <div className="game-meta">
+          <span className="game-studio">Студия: {studio}</span>
+          <span className="game-genre">Жанр: {genre}</span>
+        </div>
+        {description && (
+          <p className="game-description">{description}</p>
+        )}
+        <div className="game-actions">
+          <NavLink to={`/edit/${this.props.task._id}`} className="btn-edit">
+            Изменить
+          </NavLink>
+          <button onClick={this.onDelete} className="btn-delete">
+            Удалить
+          </button>
+        </div>
+      </div>
     );
   }
 }
 
-export default ToDoTask;
+export default connect()(ToDoTask);

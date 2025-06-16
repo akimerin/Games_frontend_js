@@ -1,73 +1,59 @@
 import React from 'react';
-import  { useNavigate }  from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { todoAdd } from './actions';
 
-class ToDoTaskAddInner extends React.Component {
-  constructor(props) {
-    super(props);
+class AddInner extends React.Component {
+  state = { name: '', price: '', studio: '', genre: '' };
 
-    this.state = {
-      name: '',
-   description: ''
-    };
+  onChange = e => {
+    this.setState({ [e.target.name]: e.target.value });
+  };
 
-    this.onNameChange = this.onNameChange.bind(this);
-    this.onDescriptionChange = this.onDescriptionChange.bind(this);
-	this.onAddFormSubmit = this.onAddFormSubmit.bind(this);
-  }
- 
-  onNameChange(e) {
+  onSubmit = e => {
     e.preventDefault();
-
-    this.setState({
-      name: e.target.value 
-    });
-  }
-  
-  onDescriptionChange(e) {
-    e.preventDefault();
-
-    this.setState({
-      description: e.target.value 
-    });
-  }
- onAddFormSubmit(e) {
-  e.preventDefault();
-
- fetch('tasks', {
-  method: 'POST',
- body: JSON.stringify({
-  name: this.state.name,
-  description: this.state.description
-    }),
- headers:  {
-  'Content-Type':'application/json'
- }
-  })
-  .then((res) => {
-	  return res.json();
-	
-  })
-  .then((data) => {
-	this.props.onTaskAdd(data);
-	this.props.history('/');
-  });
-}
+    fetch('tasks', {
+      method: 'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ ...this.state, done: false })
+    })
+      .then(res => res.json())
+      .then(data => {
+        this.props.dispatch(todoAdd(
+          data._id,
+          data.name,
+          data.price,
+          data.studio,
+          data.genre,
+          data.done
+        ));
+        this.props.history('/');
+      });
+  };
 
   render() {
+    const { name, price, studio, genre } = this.state;
     return (
-      <form onSubmit={this.onAddFormSubmit}>
-		<input type="text" value={this.state.name} onChange={this.onNameChange} placeholder="Name" />
-		<input type="text" value={this.state.description} onChange={this.onDescriptionChange} placeholder="Description" />
-		<input type="submit" value="Add"/>
-		</form>
+      <div className="card">
+        <div className="card-header"> Add game</div>
+        <form onSubmit={this.onSubmit} className="p-3">
+          <input name="name"    value={name}   onChange={this.onChange} className="form-control mb-2" placeholder="Название" required />
+          <input name="price"   value={price}  onChange={this.onChange} className="form-control mb-2" placeholder="Цена"    required />
+          <input name="studio"  value={studio} onChange={this.onChange} className="form-control mb-2" placeholder="Студия"  required />
+          <input name="genre"   value={genre}  onChange={this.onChange} className="form-control mb-2" placeholder="Жанр"    required />
+          <button type="submit" className="btn btn-primary">Add</button>
+        </form>
+        <div className="card-footer text-right">
+          <NavLink to="/" className="btn btn-secondary">Back</NavLink>
+        </div>
+      </div>
     );
   }
 }
-const ToDoTaskAdd = (props) => {
-  return (
-    <ToDoTaskAddInner {...props} history={useNavigate()} />
-  );
-}
 
+const ToDoTaskAdd = props => {
+  const navigate = useNavigate();
+  return <AddInner {...props} history={navigate} />;
+};
 
-export default ToDoTaskAdd;
+export default connect()(ToDoTaskAdd);
